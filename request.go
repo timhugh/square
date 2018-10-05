@@ -11,15 +11,15 @@ import (
 	"net/http"
 )
 
-// InvalidSignature is used to report an error when a signature cannot be authenticated.
-type InvalidSignature string
+// InvalidSignatureError is used to report an error when a signature cannot be authenticated.
+type InvalidSignatureError string
 
-func (r InvalidSignature) Error() string {
+func (r InvalidSignatureError) Error() string {
 	return "invalid signature" + string(r)
 }
 
 // AuthenticateRequest authenticates an HTTP request against a signature key by comparing the X-Square-Signature header to a valid signature generated from the request url, body, and the signature key.
-// A valid request will return nil. An invalid signature will return a InvalidSignature error.
+// A valid request will return nil. An invalid signature will return a InvalidSignatureError error.
 // Any other errors will be directly returned.
 func AuthenticateRequest(r *http.Request, signatureKey string) error {
 	requestURL := r.URL.String()
@@ -33,11 +33,11 @@ func AuthenticateRequest(r *http.Request, signatureKey string) error {
 }
 
 // AuthenticateSignature authenticates a signature against a signature key by comparing the signature to a valid signature generated from the url, body, and the signature key.
-// A valid signature will return nil. An invalid signature will return an InvalidSignature error.
+// A valid signature will return nil. An invalid signature will return an InvalidSignatureError error.
 func AuthenticateSignature(signature, url, body, signatureKey string) error {
 	expectedSignature := GenerateSignature(url, body, signatureKey)
 	if signature != expectedSignature {
-		return InvalidSignature(fmt.Sprintf("expected \"%s\", got \"%s\"", expectedSignature, signature))
+		return InvalidSignatureError(fmt.Sprintf("expected \"%s\", got \"%s\"", expectedSignature, signature))
 	}
 	return nil
 }

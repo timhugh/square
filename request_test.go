@@ -36,12 +36,12 @@ func TestBadSignature(t *testing.T) {
 
 	err := square.AuthenticateRequest(request, signatureKey)
 	if err == nil {
-		t.Fatal("expected InvalidSignature error but got none")
+		t.Fatal("expected InvalidSignatureError error but got none")
 	}
 
-	_, ok := err.(square.InvalidSignature)
+	_, ok := err.(square.InvalidSignatureError)
 	if !ok {
-		t.Errorf("expected InvalidSignature error but got %+v", err)
+		t.Errorf("expected InvalidSignatureError error but got %+v", err)
 	}
 }
 
