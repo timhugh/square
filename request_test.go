@@ -10,11 +10,12 @@ import (
 	"github.com/timhugh/square"
 )
 
-const goodSignature = "DwwpgL5sy1WXHwPSsLNN27tGRSY="
-const requestBody = `{"event": "test"}`
-const requestURL = "http://www.example.com/events"
-
-const signatureKey = "test_key"
+const (
+	goodSignature = "DwwpgL5sy1WXHwPSsLNN27tGRSY="
+	requestBody   = `{"event": "test"}`
+	requestURL    = "http://www.example.com/events"
+	signatureKey  = "test_key"
+)
 
 func stubRequest(url, body, signature string) *http.Request {
 	r := httptest.NewRequest("POST", requestURL, strings.NewReader(requestBody))

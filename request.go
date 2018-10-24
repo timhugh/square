@@ -23,7 +23,9 @@ func (r InvalidSignatureError) Error() string {
 // Any other errors will be directly returned.
 func AuthenticateRequest(r *http.Request, signatureKey string) error {
 	requestURL := r.URL.String()
-	requestBody, err := readBody(r)
+	requestBody, err := readBody(r.Body)
+	// replace the request body so it can be read again later
+	r.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
 	if err != nil {
 		return err
 	}
@@ -49,12 +51,11 @@ func GenerateSignature(url, body, key string) string {
 	return base64.StdEncoding.EncodeToString(mac.Sum(nil))
 }
 
-func readBody(r *http.Request) ([]byte, error) {
-	buf, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+func readBody(body io.ReadCloser) ([]byte, error) {
+	buf, err := ioutil.ReadAll(io.LimitReader(body, 1048576))
+	body.Close()
 	if err != nil {
 		return nil, err
 	}
-	// replace the request body so it can be read again later
-	r.Body = ioutil.NopCloser(bytes.NewBuffer(buf))
 	return buf, nil
 }
