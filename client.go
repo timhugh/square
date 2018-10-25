@@ -7,35 +7,34 @@ import (
 )
 
 type Client struct {
-	apiURL     string
-	authToken  string
-	httpClient *http.Client
+	ApiUrl     string
+	HttpClient *http.Client
 }
 
+const squareApiUrl = "https://connect.squareup.com"
 const (
 	paymentRoute = "/v1/%s/payments/%s"
 )
 
-func NewClient(authToken string, httpClient *http.Client, apiURL string) *Client {
+func NewClient() *Client {
 	return &Client{
-		authToken:  authToken,
-		apiURL:     apiURL,
-		httpClient: httpClient,
+		ApiUrl:     squareApiUrl,
+		HttpClient: http.DefaultClient,
 	}
 }
 
-func (c *Client) FetchPayment(paymentID, locationID string) (map[string]interface{}, error) {
-	url := c.apiURL + fmt.Sprintf(paymentRoute, locationID, paymentID)
-	return c.getJSONResponse(url)
+func (c *Client) FetchPayment(authToken, paymentID, locationID string) (map[string]interface{}, error) {
+	url := c.ApiUrl + fmt.Sprintf(paymentRoute, locationID, paymentID)
+	return c.getJSONResponse(url, authToken)
 }
 
-func (c *Client) getJSONResponse(url string) (map[string]interface{}, error) {
+func (c *Client) getJSONResponse(url, authToken string) (map[string]interface{}, error) {
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
-	request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.authToken))
-	response, err := c.httpClient.Do(request)
+	request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", authToken))
+	response, err := c.HttpClient.Do(request)
 	if err != nil {
 		return nil, err
 	}

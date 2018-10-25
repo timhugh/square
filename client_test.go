@@ -11,17 +11,15 @@ import (
 )
 
 func TestFetchesPayments(t *testing.T) {
-	authToken := "token"
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server, client := buildClient(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") != "Bearer token" {
 			t.Errorf("expected request to include authorization header \"Bearer token\" but got \"%s\"", r.Header.Get("Authorization"))
 		}
 		fmt.Fprint(w, `{"payment_id": "payment_id", "location_id": "location_id"}`)
 	}))
 	defer server.Close()
-	client := NewClient(authToken, server.Client(), server.URL)
 
-	paymentData, err := client.FetchPayment("payment_id", "location_id")
+	paymentData, err := client.FetchPayment("token", "payment_id", "location_id")
 	if err != nil {
 		t.Errorf("expected to retrieve payment without error but got \"%s\"", err)
 	}
@@ -36,15 +34,13 @@ func TestFetchesPayments(t *testing.T) {
 }
 
 func TestFetchPaymentNotFound(t *testing.T) {
-	authToken := "token"
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server, client := buildClient(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprint(w, `{"type":"not_found","message":"Payment not found"}`)
 	}))
 	defer server.Close()
-	client := NewClient(authToken, server.Client(), server.URL)
 
-	_, err := client.FetchPayment("payment_id", "location_id")
+	_, err := client.FetchPayment("token", "payment_id", "location_id")
 
 	_, ok := err.(NotFoundError)
 	if err == nil || err.Error() != "Payment not found" || !ok {
@@ -53,18 +49,25 @@ func TestFetchPaymentNotFound(t *testing.T) {
 }
 
 func TestFetchPaymentAuthError(t *testing.T) {
-	authToken := "token"
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server, client := buildClient(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Fprint(w, `{"type":"service.not_authorized","message":"Not Authorized"}`)
 	}))
 	defer server.Close()
-	client := NewClient(authToken, server.Client(), server.URL)
 
-	_, err := client.FetchPayment("payment_id", "location_id")
+	_, err := client.FetchPayment("token", "payment_id", "location_id")
 
 	_, ok := err.(NotAuthorizedError)
 	if err == nil || err.Error() != "Not Authorized" || !ok {
 		t.Errorf("expected to receive NotAuthorizedError with message \"Not Authorized\" error but got %T with message \"%s\"", err, err)
 	}
+}
+
+func buildClient(handler http.HandlerFunc) (*httptest.Server, *Client) {
+	server := httptest.NewTLSServer(handler)
+	client := &Client{
+		ApiUrl:     server.URL,
+		HttpClient: server.Client(),
+	}
+	return server, client
 }
