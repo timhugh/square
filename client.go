@@ -23,7 +23,7 @@ func NewClient() *Client {
 	}
 }
 
-func (c *Client) FetchPayment(authToken, paymentID, locationID string) (map[string]interface{}, error) {
+func (c *Client) FetchPayment(paymentID, locationID, authToken string) (map[string]interface{}, error) {
 	url := c.ApiUrl + fmt.Sprintf(paymentRoute, locationID, paymentID)
 	return c.getJSONResponse(url, authToken)
 }
