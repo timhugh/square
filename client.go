@@ -16,8 +16,8 @@ const (
 	paymentRoute = "/v1/%s/payments/%s"
 )
 
-func NewClient(authToken string, httpClient *http.Client, apiURL string) Client {
-	return Client{
+func NewClient(authToken string, httpClient *http.Client, apiURL string) *Client {
+	return &Client{
 		authToken:  authToken,
 		apiURL:     apiURL,
 		httpClient: httpClient,
